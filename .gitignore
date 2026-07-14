@@ -1,4 +1,3 @@
-cat > .gitignore << 'EOF'
 # Python
 __pycache__/
 *.py[cod]
@@ -7,6 +6,15 @@ venv/
 .env
 .env.*
 
-# OS/Editor
+# OS / editor
 .DS_Store
 .vscode/
+
+# Pipeline inputs and generated outputs
+input_files_dir/*
+!input_files_dir/.gitkeep
+convert_markdown_dir/*
+!convert_markdown_dir/.gitkeep
+final_markdown_dir/*
+!final_markdown_dir/.gitkeep
+output_files_dir/

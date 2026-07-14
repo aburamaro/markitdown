@@ -25,13 +25,25 @@ def show_conversion_summary(results: Iterable[ConversionResult]) -> None:
     failure_count = len(result_list) - success_count
 
     if failure_count == 0:
-        logger.info("[SUCCESS] Done. success=%s failure=%s", success_count, failure_count)
+        logger.info(
+            "[SUCCESS] Done. success=%s failure=%s",
+            success_count,
+            failure_count
+        )
     else:
-        logger.info("[FAILED] Done. success=%s failure=%s", success_count, failure_count)
+        logger.info(
+            "[FAILED] Done. success=%s failure=%s",
+            success_count,
+            failure_count
+        )
 
     if failure_count > 0:
         logger.info("[FAILED] Failed files:")
 
         for result in result_list:
             if not result.is_success:
-                logger.info("- %s: %s", result.source_path, result.error_message)
+                logger.info(
+                    "- %s: %s",
+                    result.source_path,
+                    result.error_message
+                )

@@ -5,17 +5,19 @@
 このプロジェクトは、PDF、Office、HTML、テキスト系ファイルをMarkdownへ変換するローカル実行用のPython CLIツールです。
 
 入力ファイルは `input_files_dir/` に配置します。  
-変換後のMarkdownファイルは `output_files_dir/` に出力します。
+MarkItDownによる変換結果は `convert_markdown_dir/` に出力します。
+GitHub Copilot SDKによる整形後の最終版は `final_markdown_dir/` に出力します。
 
 対応ファイルに画像が含まれている場合は、画像ファイルを抽出し、生成したMarkdownの末尾に画像リンクを追加します。
 
-## セキュリティ制約
+## GitHub Copilot SDK連携
 
-- 外部LLM API連携を追加しないでください。
+- MarkItDownによる変換後のMarkdownは、GitHub Copilot SDKへ送信して整形します。
+- Copilot SDK以外のLLMサービス連携を追加しないでください。
 - OpenAI、Azure OpenAI、その他LLMサービスのAPIキーを必要とする実装にしないでください。
-- 文書内容を外部サービスへ送信するコードを追加しないでください。
+- Copilotの認証情報は環境変数またはCopilot CLIのログイン情報から取得してください。
 - 秘密情報をリポジトリに保存しないでください。
-- 現在の実装では `.env` は不要です。
+- Markdown本文だけをSDKへ渡し、Copilotにローカルファイル操作をさせないでください。
 
 ## 実行方法
 

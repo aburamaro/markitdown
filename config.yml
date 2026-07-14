@@ -1,0 +1,42 @@
+# パイプラインで使用する入出力先と整形プロンプトの標準パス。
+# 相対パスはコマンドを実行したディレクトリを基準に解決されます。
+paths:
+  input_dir: input_files_dir
+  convert_output_dir: convert_markdown_dir
+  final_output_dir: final_markdown_dir
+  format_prompt: .github/prompts/format_markdown_prompt.md
+
+# GitHub Copilot SDKによるMarkdown整形に使用するモデル。
+# autoを指定すると、SDKが利用可能なモデルを自動選択します。
+copilot:
+  model: auto
+
+# MarkItDown変換と画像抽出で取り扱うファイル形式。
+# 拡張子は先頭にピリオドを付けて記述してください。
+file_types:
+  # Markdownへの変換対象として検索する拡張子。
+  supported:
+    - .pdf
+    - .docx
+    - .doc
+    - .pptx
+    - .xlsx
+    - .xls
+    - .csv
+    - .html
+    - .htm
+    - .txt
+    - .json
+    - .xml
+
+  # ファイル内部から画像を抽出できる形式。
+  image_extraction:
+    # ZIPベースのOffice Open XML形式。
+    openxml:
+      - .docx
+      - .pptx
+      - .xlsx
+    # HTML文書として画像参照を解析する形式。
+    html:
+      - .html
+      - .htm

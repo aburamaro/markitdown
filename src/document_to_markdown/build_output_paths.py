@@ -5,7 +5,11 @@ from pathlib import Path
 
 
 # 入力ディレクトリ配下の階層を保ったまま、出力先のMarkdownファイルパスを組み立てる。
-def build_markdown_output_path(source_path: Path, input_root: Path, output_dir: Path) -> Path:
+def build_markdown_output_path(
+        source_path: Path,
+        input_root: Path,
+        output_dir: Path
+) -> Path:
     if input_root.is_dir():
         relative_path = source_path.relative_to(input_root)
         return output_dir / relative_path.with_suffix(".md")
@@ -14,10 +18,19 @@ def build_markdown_output_path(source_path: Path, input_root: Path, output_dir: 
 
 
 # 抽出した画像の保存先ディレクトリを組み立てる。
-def build_image_output_dir(source_path: Path, input_root: Path, output_dir: Path) -> Path:
+def build_image_output_dir(
+        source_path: Path,
+        input_root: Path,
+        output_dir: Path
+) -> Path:
     if input_root.is_dir():
         relative_path = source_path.relative_to(input_root).with_suffix("")
-        return output_dir / "images" / relative_path
+        return (
+            output_dir
+            / relative_path.parent
+            / "images"
+            / relative_path.name
+        )
 
     return output_dir / "images" / source_path.stem
 

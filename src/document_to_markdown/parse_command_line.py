@@ -4,10 +4,13 @@ import argparse
 import logging
 from pathlib import Path
 
-from document_to_markdown.settings import DEFAULT_INPUT_DIR, DEFAULT_OUTPUT_DIR
+from document_to_markdown.config import (
+    DEFAULT_CONFIG_PATH,
+    load_config,
+)
 
 
-# ログ出力の詳しさをコマンドライン引数に応じて切り替える。
+# コマンドライン引数に応じてログ出力の詳しさを切り替える。
 def configure_logging(verbose: bool) -> None:
     log_level = logging.DEBUG if verbose else logging.INFO
 
@@ -19,33 +22,83 @@ def configure_logging(verbose: bool) -> None:
 
 # コマンドライン引数を定義し、実行時の設定値として読み取る。
 def parse_command_line() -> argparse.Namespace:
+    config_parser = argparse.ArgumentParser(add_help=False)
+    config_parser.add_argument(
+        "--config",
+        type=Path,
+        default=DEFAULT_CONFIG_PATH
+    )
+    config_args, _ = config_parser.parse_known_args()
+    config = load_config(config_args.config)
+
     parser = argparse.ArgumentParser(
-        description="Convert PDF and Office files to Markdown using MarkItDown."
+        description=(
+            "Convert documents with MarkItDown, "
+            "then format the generated Markdown "
+            "with the GitHub Copilot SDK."
+        )
+    )
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=config_args.config,
+        help=(
+            "Path to YAML configuration file. "
+            f"Default: {DEFAULT_CONFIG_PATH}"
+        ),
     )
 
     parser.add_argument(
         "input_path",
         nargs="?",
         type=Path,
-        default=DEFAULT_INPUT_DIR,
+        default=config.input_dir,
         help=(
             "PDF / Office file path or directory path. "
-            f"Default: {DEFAULT_INPUT_DIR}"
+            f"Default: {config.input_dir}"
         ),
     )
 
     parser.add_argument(
-        "-o",
-        "--output-dir",
+        "--convert-output-dir",
         type=Path,
-        default=DEFAULT_OUTPUT_DIR,
-        help=f"Directory to save markdown files. Default: {DEFAULT_OUTPUT_DIR}",
+        default=config.convert_output_dir,
+        help=(
+            "Directory for MarkItDown conversion results. "
+            f"Default: {config.convert_output_dir}"
+        ),
+    )
+
+    parser.add_argument(
+        "--final-output-dir",
+        type=Path,
+        default=config.final_output_dir,
+        help=(
+            "Directory for Copilot-formatted final Markdown files. "
+            f"Default: {config.final_output_dir}"
+        ),
+    )
+
+    parser.add_argument(
+        "--format-prompt",
+        type=Path,
+        default=config.format_prompt,
+        help=(
+            "Path to the prompt file for Copilot formatting. "
+            f"Default: {config.format_prompt}"
+        ),
+    )
+
+    parser.add_argument(
+        "--copilot-model",
+        default=config.copilot_model,
+        help=f"Copilot model name. Default: {config.copilot_model}",
     )
 
     parser.add_argument(
         "--overwrite",
         action="store_true",
-        help="Overwrite existing markdown files.",
+        help="Overwrite existing converted and final files.",
     )
 
     parser.add_argument(
@@ -61,4 +114,6 @@ def parse_command_line() -> argparse.Namespace:
         help="Show debug logs.",
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    args.app_config = config
+    return args

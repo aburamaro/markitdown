@@ -6,8 +6,6 @@ from document_to_markdown.image_output.extract_html_images import extract_html_i
 from document_to_markdown.image_output.extract_officeapp_images import extract_office_images
 from document_to_markdown.image_output.extract_pdf_images import extract_pdf_images
 from document_to_markdown.image_output.extract_images import (
-    HTML_EXTENSIONS,
-    OPENXML_EXTENSIONS,
     ExtractedImage,
 )
 
@@ -17,6 +15,8 @@ def extract_images_from_file(
     source_path: Path,
     image_output_dir: Path,
     overwrite: bool,
+    openxml_extensions: frozenset[str],
+    html_extensions: frozenset[str],
 ) -> list[ExtractedImage]:
     file_extension = source_path.suffix.lower()
 
@@ -27,14 +27,14 @@ def extract_images_from_file(
             overwrite=overwrite,
         )
 
-    if file_extension in OPENXML_EXTENSIONS:
+    if file_extension in openxml_extensions:
         return extract_office_images(
             source_path=source_path,
             image_output_dir=image_output_dir,
             overwrite=overwrite,
         )
 
-    if file_extension in HTML_EXTENSIONS:
+    if file_extension in html_extensions:
         return extract_html_images(
             source_path=source_path,
             image_output_dir=image_output_dir,

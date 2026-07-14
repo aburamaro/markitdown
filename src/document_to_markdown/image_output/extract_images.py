@@ -3,9 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from document_to_markdown.settings import HTML_EXTENSIONS, OPENXML_EXTENSIONS
-
-
 @dataclass(frozen=True)
 class ExtractedImage:
     image_path: Path
