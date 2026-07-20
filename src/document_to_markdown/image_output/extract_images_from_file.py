@@ -2,13 +2,22 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from document_to_markdown.image_output.extract_html_images import extract_html_images
-from document_to_markdown.image_output.extract_officeapp_images import extract_office_images
-from document_to_markdown.image_output.extract_pdf_images import extract_pdf_images
+from document_to_markdown.image_output.extract_html_images import (
+    extract_html_images,
+)
 from document_to_markdown.image_output.extract_images import (
+    ExtractedImage,
+)
+from document_to_markdown.image_output.extract_officeapp_images import (
+    extract_office_images,
+)
+from document_to_markdown.image_output.extract_pdf_images import (
+    extract_pdf_images,
+)
+from document_to_markdown.settings import (
     HTML_EXTENSIONS,
     OPENXML_EXTENSIONS,
-    ExtractedImage,
+    PDF_EXTENSIONS,
 )
 
 
@@ -20,7 +29,8 @@ def extract_images_from_file(
 ) -> list[ExtractedImage]:
     file_extension = source_path.suffix.lower()
 
-    if file_extension == ".pdf":
+    if file_extension in PDF_EXTENSIONS:
+        # PDF専用処理へ画像抽出を委譲する。
         return extract_pdf_images(
             source_path=source_path,
             image_output_dir=image_output_dir,
@@ -28,6 +38,7 @@ def extract_images_from_file(
         )
 
     if file_extension in OPENXML_EXTENSIONS:
+        # Office Open XML専用処理へ画像抽出を委譲する。
         return extract_office_images(
             source_path=source_path,
             image_output_dir=image_output_dir,
@@ -35,6 +46,7 @@ def extract_images_from_file(
         )
 
     if file_extension in HTML_EXTENSIONS:
+        # HTML専用処理へ画像抽出を委譲する。
         return extract_html_images(
             source_path=source_path,
             image_output_dir=image_output_dir,

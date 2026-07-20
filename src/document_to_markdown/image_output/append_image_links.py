@@ -27,11 +27,14 @@ def append_image_links(
             image_lines.append(f"### {current_section_title}")
             image_lines.append("")
 
+        # 保存先Markdownから見た画像の相対リンクを生成する。
         image_link = build_markdown_image_path(
             markdown_path=markdown_path,
             image_path=extracted_image.image_path,
         )
-        image_lines.append(f"![{extracted_image.markdown_alt_text}]({image_link})")
+        image_lines.append(
+            f"![{extracted_image.markdown_alt_text}]({image_link})"
+        )
         image_lines.append("")
 
     return markdown_text.rstrip() + "\n".join(image_lines)

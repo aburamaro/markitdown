@@ -3,9 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from document_to_markdown.settings import HTML_EXTENSIONS, OPENXML_EXTENSIONS
-
-
 @dataclass(frozen=True)
 class ExtractedImage:
     image_path: Path
@@ -17,7 +14,9 @@ class ExtractedImage:
 
 
 # 抽出した画像を、セクション、表示順、上から下、左から右の順に並べる。
-def sort_extracted_images(extracted_images: list[ExtractedImage]) -> list[ExtractedImage]:
+def sort_extracted_images(
+    extracted_images: list[ExtractedImage],
+) -> list[ExtractedImage]:
     return sorted(
         extracted_images,
         key=lambda image: (

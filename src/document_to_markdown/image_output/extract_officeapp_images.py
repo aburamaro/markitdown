@@ -15,6 +15,7 @@ def extract_office_images(
 ) -> list[ExtractedImage]:
     extracted_images: list[ExtractedImage] = []
 
+    # Office Open XMLファイルをZIPアーカイブとして開く。
     with zipfile.ZipFile(source_path) as archive:
         media_names = [
             file_name
@@ -24,7 +25,9 @@ def extract_office_images(
 
         for image_index, media_name in enumerate(sorted(media_names), start=1):
             image_name = Path(media_name).name
-            image_path = image_output_dir / f"media_{image_index:03d}_{image_name}"
+            image_path = image_output_dir / (
+                f"media_{image_index:03d}_{image_name}"
+            )
 
             validate_output_path(output_path=image_path, overwrite=overwrite)
             image_path.parent.mkdir(parents=True, exist_ok=True)
@@ -35,7 +38,9 @@ def extract_office_images(
             extracted_images.append(
                 ExtractedImage(
                     image_path=image_path,
-                    markdown_alt_text=f"{source_path.stem} embedded image {image_index}",
+                    markdown_alt_text=(
+                        f"{source_path.stem} embedded image {image_index}"
+                    ),
                     section_title="Embedded Images",
                     sort_index=image_index,
                     x0=0,

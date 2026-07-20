@@ -17,12 +17,17 @@ logger = logging.getLogger(__name__)
 
 
 class HtmlImageParser(HTMLParser):
+    # HTML解析中に見つけた画像参照を保持する。
     def __init__(self) -> None:
         super().__init__()
         self.image_sources: list[str] = []
 
     # HTML内のimgタグからsrc属性だけを順番に集める。
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+    def handle_starttag(
+        self,
+        tag: str,
+        attrs: list[tuple[str, str | None]],
+    ) -> None:
         if tag.lower() != "img":
             return
 
@@ -53,7 +58,10 @@ def decode_data_uri_image(image_source: str) -> tuple[bytes, str] | None:
 
 
 # HTMLのimgタグが参照するローカル画像パスを解決する。
-def resolve_local_html_image_path(html_path: Path, image_source: str) -> Path | None:
+def resolve_local_html_image_path(
+    html_path: Path,
+    image_source: str,
+) -> Path | None:
     parsed_source = urlparse(image_source)
 
     if parsed_source.scheme in {"http", "https"}:
@@ -80,12 +88,14 @@ def extract_html_images(
     image_output_dir: Path,
     overwrite: bool,
 ) -> list[ExtractedImage]:
+    # HTMLを解析し、imgタグのsrc属性を出現順に収集する。
     parser = HtmlImageParser()
     parser.feed(source_path.read_text(encoding="utf-8", errors="ignore"))
 
     extracted_images: list[ExtractedImage] = []
 
     for image_index, image_source in enumerate(parser.image_sources, start=1):
+        # data URIとローカルファイル参照を分けて処理する。
         decoded_image = decode_data_uri_image(image_source)
 
         if decoded_image:
@@ -119,7 +129,9 @@ def extract_html_images(
         extracted_images.append(
             ExtractedImage(
                 image_path=image_path,
-                markdown_alt_text=f"{source_path.stem} html image {image_index}",
+                markdown_alt_text=(
+                    f"{source_path.stem} html image {image_index}"
+                ),
                 section_title="HTML Images",
                 sort_index=image_index,
                 x0=0,

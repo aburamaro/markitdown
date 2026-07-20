@@ -4,13 +4,17 @@ import argparse
 import logging
 from pathlib import Path
 
-from document_to_markdown.settings import DEFAULT_INPUT_DIR, DEFAULT_OUTPUT_DIR
+from document_to_markdown.settings import (
+    DEFAULT_CONVERTED_DIR,
+    DEFAULT_INPUT_DIR,
+)
 
 
 # ログ出力の詳しさをコマンドライン引数に応じて切り替える。
 def configure_logging(verbose: bool) -> None:
     log_level = logging.DEBUG if verbose else logging.INFO
 
+    # 全モジュールで共通のログレベルと表示形式を設定する。
     logging.basicConfig(
         level=log_level,
         format="%(levelname)s: %(message)s",
@@ -19,8 +23,11 @@ def configure_logging(verbose: bool) -> None:
 
 # コマンドライン引数を定義し、実行時の設定値として読み取る。
 def parse_command_line() -> argparse.Namespace:
+    # MarkItDown変換だけに必要なCLI引数を定義する。
     parser = argparse.ArgumentParser(
-        description="Convert PDF and Office files to Markdown using MarkItDown."
+        description=(
+            "Convert PDF and Office files to Markdown using MarkItDown."
+        )
     )
 
     parser.add_argument(
@@ -38,8 +45,11 @@ def parse_command_line() -> argparse.Namespace:
         "-o",
         "--output-dir",
         type=Path,
-        default=DEFAULT_OUTPUT_DIR,
-        help=f"Directory to save markdown files. Default: {DEFAULT_OUTPUT_DIR}",
+        default=DEFAULT_CONVERTED_DIR,
+        help=(
+            "Directory to save converted markdown files. "
+            f"Default: {DEFAULT_CONVERTED_DIR}"
+        ),
     )
 
     parser.add_argument(
