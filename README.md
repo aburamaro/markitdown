@@ -2,7 +2,12 @@
 
 `markitdown` を使って、PDFやOfficeファイルをMarkdownへ変換するPythonスクリプトです。
 
-`input_files_dir/` に配置したファイルを読み込み、Markdown化した結果を `output_files_dir/` に出力します。
+`input_files_dir/` に配置したファイルを読み込み、MarkItDownによる変換結果を
+`convert_markdown_dir/` に出力します。プロンプトで手動整形した最終成果物は
+`final_markdown_dir/` に配置します。
+
+PythonコードはMarkItDownによる変換までを担当します。Copilot SDKや外部LLM APIを
+呼び出す処理は含みません。
 
 PDFだけでなく、DOCX / PPTX / XLSXなどのOfficeファイルも扱いやすいように、対象拡張子・入力収集・変換・保存処理を分けています。
 
@@ -11,6 +16,7 @@ PDFだけでなく、DOCX / PPTX / XLSXなどのOfficeファイルも扱いや�
 - Python 3.10以上
 - markitdown
 - PyMuPDF
+- PyYAML
 - devcontainer
 
 ## ディレクトリ構成
@@ -18,7 +24,9 @@ PDFだけでなく、DOCX / PPTX / XLSXなどのOfficeファイルも扱いや�
 ```text
 markitdown/
 ├── input_files_dir/
-├── output_files_dir/
+├── convert_markdown_dir/
+├── final_markdown_dir/
+├── config.yml
 ├── src/
 │   ├── main.py
 │   └── document_to_markdown/
@@ -48,7 +56,11 @@ markitdown/
 
 ## インストール
 
-devcontainer内のターミナルで実行します。
+Dev Containerを使用する場合、`requirements.txt` の依存関係はイメージのビルド時に
+自動でインストールされます。依存関係を変更した場合は、Dev Containerを再ビルド
+してください。
+
+Dev Containerを使用しない場合は、以下の手順でインストールします。
 
 ### requirements.txtを使う場合
 
@@ -57,6 +69,7 @@ devcontainer内のターミナルで実行します。
 ```txt
 markitdown[all]
 pymupdf
+PyYAML
 ```
 
 その後、依存関係をインストールします。
@@ -75,6 +88,7 @@ source .venv/bin/activate
 python -m pip install --upgrade pip
 pip install "markitdown[all]"
 pip install pymupdf
+pip install PyYAML
 ```
 
 ## 使い方
@@ -85,7 +99,8 @@ pip install pymupdf
 python src/main.py
 ```
 
-`input_files_dir/` 配下の対応ファイルを再帰的に探し、`output_files_dir/` にMarkdownファイルを出力します。
+`input_files_dir/` 配下の対応ファイルを再帰的に探し、
+`convert_markdown_dir/` にMarkdownファイルを出力します。
 
 たとえば以下のように配置します。
 
@@ -99,18 +114,20 @@ input_files_dir/
 実行後は以下のように出力されます。
 
 ```text
-output_files_dir/
+convert_markdown_dir/
 ├── sample.md
 ├── meeting.md
 └── report.md
 ```
 
-PDFやOfficeファイル内に画像が含まれている場合は、画像ファイルも `output_files_dir/images/` 配下に書き出され、Markdown末尾に画像リンクが追加されます。
+PDFやOfficeファイル内に画像が含まれている場合は、画像ファイルも
+`convert_markdown_dir/images/` 配下に書き出され、Markdown末尾に画像リンクが
+追加されます。
 
 PDFの画像リンクはページ別に分けられ、同じページ内ではPDF上の座標をもとに、上から下、左から右の順に並べます。
 
 ```text
-output_files_dir/
+convert_markdown_dir/
 ├── sample.md
 └── images/
     └── sample/
@@ -149,7 +166,7 @@ input_files_dir/
 ```
 
 ```text
-output_files_dir/
+convert_markdown_dir/
 └── 2026/
     └── sample.md
 ```
@@ -163,7 +180,7 @@ python src/main.py ./input_files_dir/sample.pdf
 ### 入力・出力ディレクトリを指定する
 
 ```bash
-python src/main.py ./input_files_dir -o ./output_files_dir
+python src/main.py ./input_files_dir -o ./convert_markdown_dir
 ```
 
 ### 既存のMarkdownを上書きする
@@ -186,6 +203,16 @@ python src/main.py -v
 python src/main.py --no-extract-images
 ```
 
+## Copilot Chatで最終版を作る
+
+MarkItDownによる変換が完了したら、GitHub Copilot Chatで
+`.github/prompts/format_markdown_prompt.md` を使用し、整形対象として
+`convert_markdown_dir/` 内のMarkdownファイルを指定します。
+
+この整形はPython CLIから自動実行しません。Copilot Chatにプロンプトを適用して
+手動で実行し、生成された最終ファイルが `final_markdown_dir/` に保存されたことを
+確認してください。最終ファイルには `v0.1` などのリビジョンを付けます。
+
 ## 対応拡張子
 
 現在のスクリプトでは以下を対象にしています。
@@ -203,7 +230,9 @@ python src/main.py --no-extract-images
 - `.json`
 - `.xml`
 
-対象を増やしたい場合は、`src/document_to_markdown/settings.py` の `SUPPORTED_EXTENSIONS` に拡張子を追加してください。
+対象を増やしたい場合は、`config.yml` の `supported_extensions` に拡張子を
+追加してください。画像抽出も行う形式は、`image_extraction` 内の対応する一覧にも
+追加します。
 
 ## 画像抽出の対応状況
 
@@ -234,7 +263,8 @@ python src/main.py --no-extract-images
 |---|---|
 | `src/main.py` | ツールの実行入口です。 |
 | `src/document_to_markdown/run_convert.py` | 変換処理全体の流れを書いています。 |
-| `src/document_to_markdown/settings.py` | 入力・出力ディレクトリや対応拡張子など、ツール全体の基本設定です。 |
+| `config.yml` | 入力・出力ディレクトリ、対応拡張子、画像抽出対象を定義します。 |
+| `src/document_to_markdown/settings.py` | `config.yml` を読み込み、設定値を検証します。 |
 | `src/document_to_markdown/parse_command_line.py` | コマンドライン引数を読む処理です。 |
 | `src/document_to_markdown/find_input_files.py` | `input_files_dir/` から対象ファイルを探す処理です。 |
 | `src/document_to_markdown/write_markdown_output.py` | MarkItDownでMarkdown本文を作成し、Markdownファイルとして保存する処理です。 |
@@ -253,7 +283,8 @@ python src/main.py --no-extract-images
 
 スキャンPDFなど、文字情報を持たないPDFでは期待通りにMarkdown化できない場合があります。その場合はOCR対応のワークフローを別途検討してください。
 
-`output_files_dir/` に同名のMarkdownファイルが存在する場合、標準では上書きしません。上書きしたい場合は `--overwrite` を付けて実行してください。
+`convert_markdown_dir/` に同名のMarkdownファイルが存在する場合、標準では
+上書きしません。上書きしたい場合は `--overwrite` を付けて実行してください。
 
 PDF内の画像は、PDFに埋め込まれている画像オブジェクトをPyMuPDFで抽出します。ページ全体の見た目をスクリーンショット化する処理ではないため、PDFの作りによっては期待した単位で画像が抽出されない場合があります。
 

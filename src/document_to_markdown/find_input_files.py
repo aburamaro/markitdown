@@ -13,11 +13,13 @@ def is_supported_file(file_path: Path) -> bool:
 # 入力がファイルなら1件、ディレクトリなら配下の対応ファイルを再帰的に集める。
 def find_input_files(input_path: Path) -> list[Path]:
     if input_path.is_file():
+        # 単一ファイル指定でも、設定された対応拡張子か確認する。
         if not is_supported_file(input_path):
             raise ValueError(f"Unsupported file type: {input_path}")
         return [input_path]
 
     if input_path.is_dir():
+        # サブディレクトリを含め、対応ファイルを安定した順序で集める。
         files = [
             file_path
             for file_path in sorted(input_path.rglob("*"))

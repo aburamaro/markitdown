@@ -25,6 +25,7 @@ def extract_pdf_images(
 
     extracted_images: list[ExtractedImage] = []
 
+    # PDFを開き、ページ単位で画像と表示位置を取得する。
     with fitz.open(source_path) as document:
         for page_index in range(document.page_count):
             page = document.load_page(page_index)
@@ -35,7 +36,8 @@ def extract_pdf_images(
                 xref = image_entry[0]
                 image_rects = page.get_image_rects(xref)
 
-                # 同じ画像が複数箇所に表示される場合は、それぞれ別の表示位置として扱う。
+                # 同じ画像が複数箇所に表示される場合は、
+                # それぞれ別の表示位置として扱う。
                 if image_rects:
                     for image_rect in image_rects:
                         image_entries_with_position.append((image_entry, image_rect))
@@ -63,7 +65,10 @@ def extract_pdf_images(
                     f"{image_extension}"
                 )
 
-                validate_output_path(output_path=image_path, overwrite=overwrite)
+                validate_output_path(
+                    output_path=image_path,
+                    overwrite=overwrite,
+                )
                 image_path.parent.mkdir(parents=True, exist_ok=True)
                 image_path.write_bytes(image_bytes)
 
