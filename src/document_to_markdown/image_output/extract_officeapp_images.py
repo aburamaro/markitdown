@@ -25,9 +25,7 @@ def extract_office_images(
 
         for image_index, media_name in enumerate(sorted(media_names), start=1):
             image_name = Path(media_name).name
-            image_path = image_output_dir / (
-                f"media_{image_index:03d}_{image_name}"
-            )
+            image_path = image_output_dir / (f"media_{image_index:03d}_{image_name}")
 
             validate_output_path(output_path=image_path, overwrite=overwrite)
             image_path.parent.mkdir(parents=True, exist_ok=True)

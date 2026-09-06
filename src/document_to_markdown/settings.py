@@ -14,9 +14,7 @@ def _load_config(config_path: Path) -> dict[str, Any]:
     try:
         loaded_config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
     except FileNotFoundError as error:
-        raise RuntimeError(
-            f"Configuration file not found: {config_path}"
-        ) from error
+        raise RuntimeError(f"Configuration file not found: {config_path}") from error
     except yaml.YAMLError as error:
         raise RuntimeError(
             f"Failed to parse configuration file: {config_path}"
@@ -49,12 +47,8 @@ def _get_extensions(config: dict[str, Any], key: str) -> frozenset[str]:
     value = config.get(key)
     if not isinstance(value, list) or not value:
         raise ValueError(f"config.yml: '{key}' must be a non-empty list.")
-    if not all(
-        isinstance(item, str) and item.startswith(".") for item in value
-    ):
-        raise ValueError(
-            f"config.yml: every value in '{key}' must start with '.'."
-        )
+    if not all(isinstance(item, str) and item.startswith(".") for item in value):
+        raise ValueError(f"config.yml: every value in '{key}' must start with '.'.")
 
     return frozenset(item.lower() for item in value)
 

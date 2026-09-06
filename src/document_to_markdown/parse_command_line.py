@@ -25,9 +25,7 @@ def configure_logging(verbose: bool) -> None:
 def parse_command_line() -> argparse.Namespace:
     # MarkItDown変換だけに必要なCLI引数を定義する。
     parser = argparse.ArgumentParser(
-        description=(
-            "Convert PDF and Office files to Markdown using MarkItDown."
-        )
+        description=("Convert PDF and Office files to Markdown using MarkItDown.")
     )
 
     parser.add_argument(
@@ -36,8 +34,7 @@ def parse_command_line() -> argparse.Namespace:
         type=Path,
         default=DEFAULT_INPUT_DIR,
         help=(
-            "PDF / Office file path or directory path. "
-            f"Default: {DEFAULT_INPUT_DIR}"
+            f"PDF / Office file path or directory path. Default: {DEFAULT_INPUT_DIR}"
         ),
     )
 

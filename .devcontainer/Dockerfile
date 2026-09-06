@@ -8,13 +8,12 @@ WORKDIR /work_dir
 COPY requirements.txt /work_dir/
 
 # OSパッケージ更新
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# pipの更新&ライブラリのインストール
-RUN python -m pip install --no-cache-dir --upgrade pip \
-    && python -m pip install --no-cache-dir -r requirements.txt
+# Pythonライブラリのインストール
+RUN python -m pip install --no-cache-dir -r requirements.txt
 
 # ツール本体をコンテナにコピー
 COPY . /work_dir/

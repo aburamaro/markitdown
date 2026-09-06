@@ -40,9 +40,7 @@ def extract_pdf_images(
                 # それぞれ別の表示位置として扱う。
                 if image_rects:
                     for image_rect in image_rects:
-                        image_entries_with_position.append(
-                            (image_entry, image_rect)
-                        )
+                        image_entries_with_position.append((image_entry, image_rect))
                 else:
                     # 位置情報が取れないPDFでも、画像抽出自体は継続できるようにする。
                     image_entries_with_position.append(

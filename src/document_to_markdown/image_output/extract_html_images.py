@@ -129,9 +129,7 @@ def extract_html_images(
         extracted_images.append(
             ExtractedImage(
                 image_path=image_path,
-                markdown_alt_text=(
-                    f"{source_path.stem} html image {image_index}"
-                ),
+                markdown_alt_text=(f"{source_path.stem} html image {image_index}"),
                 section_title="HTML Images",
                 sort_index=image_index,
                 x0=0,

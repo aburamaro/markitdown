@@ -45,6 +45,5 @@ def build_markdown_image_path(markdown_path: Path, image_path: Path) -> str:
 def validate_output_path(output_path: Path, overwrite: bool) -> None:
     if output_path.exists() and not overwrite:
         raise FileExistsError(
-            f"Output file already exists: {output_path}. "
-            "Use --overwrite to replace it."
+            f"Output file already exists: {output_path}. Use --overwrite to replace it."
         )

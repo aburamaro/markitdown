@@ -32,9 +32,7 @@ def append_image_links(
             markdown_path=markdown_path,
             image_path=extracted_image.image_path,
         )
-        image_lines.append(
-            f"![{extracted_image.markdown_alt_text}]({image_link})"
-        )
+        image_lines.append(f"![{extracted_image.markdown_alt_text}]({image_link})")
         image_lines.append("")
 
     return markdown_text.rstrip() + "\n".join(image_lines)
