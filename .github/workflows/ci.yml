@@ -7,6 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Pythonによるコードチェック、フォーマットチェック、型チェック、ユニットテストを実行するジョブ
   python-check:
     name: Python Check
     runs-on: ubuntu-latest
@@ -42,6 +43,7 @@ jobs:
       - name: Unit test
         run: pytest
 
+  # DockerfileのLint、ビルド、起動テストを実行するジョブ
   docker-check:
     name: Docker Check
     runs-on: ubuntu-latest
@@ -62,6 +64,7 @@ jobs:
       - name: Smoke test Docker image
         run: docker run --rm markitdown-ci python src/main.py --help
 
+  # Gitleaksを使用して秘密情報のスキャンを実行するジョブ
   secret-scan:
     name: Secret Scan
     runs-on: ubuntu-latest
@@ -69,6 +72,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # コミット履歴全体をフェッチ
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
