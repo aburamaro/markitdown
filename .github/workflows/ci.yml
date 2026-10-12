@@ -11,8 +11,6 @@ permissions:
   actions: read
   # リポジトリをcheckoutし、プロンプトファイルを読み込むために必要
   contents: read
-  # actions/ai-inferenceをGITHUB_TOKENで利用するために必要
-  copilot-requests: write
 
 jobs:
   # Pythonによるコードチェック、フォーマットチェック、型チェック、ユニットテストを実行するジョブ
@@ -136,6 +134,24 @@ jobs:
         if: ${{ (needs.python-check.result != 'success' || needs.docker-check.result != 'success' || needs.secret-scan.result != 'success') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
         uses: actions/checkout@v4
 
+      # 失敗時も必ず最低限のCI結果が見えるように、AI解析前にベースの失敗サマリを出力
+      - name: Write failure summary header
+        if: ${{ (needs.python-check.result != 'success' || needs.docker-check.result != 'success' || needs.secret-scan.result != 'success') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        run: |
+          {
+            echo "## CI Result"
+            echo ""
+            echo "- Workflow: ${{ github.workflow }}"
+            echo "- Result: failure"
+            echo "- Source branch: ${{ github.head_ref || github.ref_name }}"
+            echo "- Target branch: ${{ github.base_ref || 'N/A' }}"
+            echo "- Commit: ${{ github.sha }}"
+            echo "- Python Check: ${{ needs.python-check.result }}"
+            echo "- Docker Check: ${{ needs.docker-check.result }}"
+            echo "- Secret Scan: ${{ needs.secret-scan.result }}"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
       # 現在のCI実行から失敗ログを取得し、取得できない場合はワークフロー全体のログを取得
       - name: Collect failed logs
         if: ${{ (needs.python-check.result != 'success' || needs.docker-check.result != 'success' || needs.secret-scan.result != 'success') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
@@ -176,6 +192,7 @@ jobs:
       - name: Generate AI summary
         if: ${{ (needs.python-check.result != 'success' || needs.docker-check.result != 'success' || needs.secret-scan.result != 'success') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
         id: ai_summary
+        continue-on-error: true
         uses: actions/ai-inference@v1
         with:
           prompt-file: .github/prompts/ci-failure-summary_prompt.yml
@@ -188,10 +205,29 @@ jobs:
           file_input: |
             failed_logs: trimmed-failed-logs.txt
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
 
       # AIが生成したMarkdownをGitHub ActionsのJob Summaryに出力
       - name: Write AI failure summary
-        if: ${{ (needs.python-check.result != 'success' || needs.docker-check.result != 'success' || needs.secret-scan.result != 'success') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        if: ${{ (needs.python-check.result != 'success' || needs.docker-check.result != 'success' || needs.secret-scan.result != 'success') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && steps.ai_summary.outcome == 'success' }}
         run: |
           cat "${{ steps.ai_summary.outputs.response-file }}" >> "$GITHUB_STEP_SUMMARY"
+
+      # AI解析に失敗した場合でも、失敗ログの抜粋と確認ポイントをJob Summaryに残す
+      - name: Write AI failure fallback
+        if: ${{ (needs.python-check.result != 'success' || needs.docker-check.result != 'success' || needs.secret-scan.result != 'success') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && steps.ai_summary.outcome != 'success' }}
+        run: |
+          {
+            echo "## AI Summary"
+            echo ""
+            echo "AI failure analysis could not be generated."
+            echo ""
+            echo "### Failed Log Message"
+            echo '```text'
+            tail -n 80 trimmed-failed-logs.txt
+            echo '```'
+            echo ""
+            echo "### Suggested Check"
+            echo "- Review the failed job logs above."
+            echo "- Check whether actions/ai-inference, Copilot CLI, or the COPILOT_PAT secret failed before generating the AI response."
+          } >> "$GITHUB_STEP_SUMMARY"
