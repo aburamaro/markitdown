@@ -13,8 +13,6 @@ permissions:
   actions: read
   # プロンプトファイルを読み込むためにリポジトリをcheckoutする権限
   contents: read
-  # Copilot CLIをGITHUB_TOKENで利用するために必要
-  copilot-requests: write
 
 jobs:
   summarize:
@@ -99,7 +97,7 @@ jobs:
       - name: Generate AI summary
         if: ${{ github.event.workflow_run.conclusion != 'success' && github.event.workflow_run.head_repository.full_name == github.repository }}
         id: ai_summary
-        uses: actions/ai-inference@v1
+        uses: actions/ai-inference@v3
         with:
           prompt-file: .github/prompts/ci-failure-summary_prompt.yml
           input: |
@@ -111,7 +109,7 @@ jobs:
           file_input: |
             failed_logs: trimmed-failed-logs.txt
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
 
       # AIが生成したMarkdownをGitHub ActionsのJob Summaryに出力
       - name: Write AI failure summary
