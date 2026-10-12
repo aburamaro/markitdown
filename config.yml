@@ -1,0 +1,38 @@
+# 入力ファイル、変換直後のMarkdown、手動整形後のMarkdownを配置する場所。
+directories:
+  # MarkItDownで変換する元ファイルを配置するディレクトリ。
+  input: input_files_dir
+  # MarkItDownによる変換直後のMarkdownを保存するディレクトリ。
+  converted: convert_markdown_dir
+  # Copilot Chatで手動整形した最終Markdownを保存するディレクトリ。
+  final: final_markdown_dir
+
+# MarkItDownの変換対象として検索するファイル拡張子。
+supported_extensions:
+  - .pdf
+  - .docx
+  - .doc
+  - .pptx
+  - .xlsx
+  - .xls
+  - .csv
+  - .html
+  - .htm
+  - .txt
+  - .json
+  - .xml
+
+# ファイル内の画像を抽出できる形式を、抽出方法ごとに定義する。
+image_extraction:
+  # PyMuPDFを使って画像を抽出するPDF形式。
+  pdf_extensions:
+    - .pdf
+  # ZIP内のmediaディレクトリから画像を抽出するOffice Open XML形式。
+  openxml_extensions:
+    - .docx
+    - .pptx
+    - .xlsx
+  # imgタグからローカル画像またはdata URI画像を抽出するHTML形式。
+  html_extensions:
+    - .html
+    - .htm

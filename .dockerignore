@@ -1,0 +1,12 @@
+.DS_Store
+.git
+.github
+.venv
+.vscode
+__pycache__
+*.py[cod]
+.env
+.env.*
+convert_markdown_dir
+final_markdown_dir
+input_files_dir

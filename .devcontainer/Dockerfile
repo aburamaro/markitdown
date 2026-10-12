@@ -1,15 +1,19 @@
+# ベースイメージ
 FROM python:3.12-slim
-
-# OSパッケージ更新 + git install
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
 
 # 作業ディレクトリの作成
 WORKDIR /work_dir
 
 # Pythonの依存関係をインストール
-COPY requirements.txt .
+COPY requirements.txt /work_dir/
 
-RUN pip install --upgrade pip
+# OSパッケージ更新
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Pythonライブラリのインストール
+RUN python -m pip install --no-cache-dir -r requirements.txt
+
+# ツール本体をコンテナにコピー
+COPY . /work_dir/

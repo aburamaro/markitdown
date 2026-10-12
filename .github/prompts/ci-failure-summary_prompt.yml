@@ -1,0 +1,50 @@
+# actions/ai-inferenceに渡すCI失敗解析用のプロンプト
+messages:
+  # AIの役割と回答時の基本ルールを定義
+  - role: system
+    content: |
+      あなたはGitHub ActionsのCI失敗を解析するアシスタントです。
+      回答は日本語で作成してください。
+      開発者が次に何を直せばよいか分かるように、簡潔かつ具体的に説明してください。
+      ログから判断できない内容を断定しないでください。
+
+  # ワークフロー情報と失敗ログを入力として渡し、出力形式を指定
+  - role: user
+    content: |
+      ## タスク
+      GitHub Actions CIの失敗ログを解析し、CI結果・失敗ログ・原因・修正方法案をMarkdownで要約してください。
+
+      ## 背景・コンテキスト
+      このリポジトリでは、Pull Request作成時にCIを実行しています。
+      CIではPythonチェック、Dockerチェック、シークレットスキャンなどを実行します。
+      このプロンプトでは、失敗したCIのログをもとに、開発者が原因を把握して修正に進めるサマリを作成します。
+
+      ## 入力
+      ### Workflow metadata
+      - Workflow: {{workflow_name}}
+      - Result: {{workflow_result}}
+      - Branch: {{branch_name}}
+      - Commit: {{commit_sha}}
+      - Run URL: {{run_url}}
+
+      ### Failed logs
+      {{failed_logs}}
+
+      ## 出力
+      次のMarkdown形式で出力してください。
+
+      ## CI Result
+      - ワークフローの結果
+      - 失敗したjobまたはstep
+
+      ## Failed Log Message
+      重要な失敗ログを短く抜粋してください。
+
+      ## Possible Cause
+      ログから推定できる失敗原因を書いてください。
+
+      ## Suggested Fix
+      解決法または修正方法案を具体的に提示してください。
+
+# 使用するAIモデルを指定します。
+model: gpt-4.1
