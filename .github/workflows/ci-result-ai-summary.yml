@@ -1,0 +1,120 @@
+name: AI CI Summary
+
+on:
+  # メインのCIワークフローが完了した後に、このワークフローを実行
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+
+permissions:
+  # 完了したCI実行とログを読み取るために必要
+  actions: read
+  # プロンプトファイルを読み込むためにリポジトリをcheckoutする権限
+  contents: read
+  # Copilot CLIをGITHUB_TOKENで利用するために必要
+  copilot-requests: write
+
+jobs:
+  summarize:
+    name: Summarize CI Result
+    runs-on: ubuntu-latest
+
+    steps:
+      # CIが成功した場合はAI解析を行わず、成功メッセージだけをJob Summaryに出力
+      - name: Write success summary
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        run: |
+          {
+            echo "## CI Result"
+            echo ""
+            echo "- Workflow: ${{ github.event.workflow_run.name }}"
+            echo "- Result: success"
+            echo "- Branch: ${{ github.event.workflow_run.head_branch }}"
+            echo "- Commit: ${{ github.event.workflow_run.head_sha }}"
+            echo ""
+            echo "All CI checks passed successfully."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # 外部fork由来のCIではAI解析を行わず、スキップ理由だけを出力
+      - name: Write skipped summary for external pull requests
+        if: ${{ github.event.workflow_run.conclusion != 'success' && github.event.workflow_run.head_repository.full_name != github.repository }}
+        run: |
+          {
+            echo "## CI Result"
+            echo ""
+            echo "- Workflow: ${{ github.event.workflow_run.name }}"
+            echo "- Result: ${{ github.event.workflow_run.conclusion }}"
+            echo "- Branch: ${{ github.event.workflow_run.head_branch }}"
+            echo "- Commit: ${{ github.event.workflow_run.head_sha }}"
+            echo ""
+            echo "AI failure analysis was skipped because the workflow run came from an external repository."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # CIが実際に走ったコミットの状態にcheckout(そのリポジトリ内にCI失敗時にAIに渡すプロンプトがあるため)
+      - name: Checkout failed CI commit
+        if: ${{ github.event.workflow_run.conclusion != 'success' && github.event.workflow_run.head_repository.full_name == github.repository }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      # まず失敗ログfailed-logs.txtにリダイレクト、失敗ログが取得できない場合はワークフロー全体のログをfailed-logs.txtにリダイレクト
+      - name: Collect failed logs
+        if: ${{ github.event.workflow_run.conclusion != 'success' && github.event.workflow_run.head_repository.full_name == github.repository }}
+        run: |
+          if gh run view "${{ github.event.workflow_run.id }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --log-failed > failed-logs.txt; then
+            exit 0
+          fi
+
+          if gh run view "${{ github.event.workflow_run.id }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --log > failed-logs.txt; then
+            exit 0
+          fi
+
+          echo "Failed logs could not be collected." > failed-logs.txt
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      # failed-logs.txtの下から400行を取り出し（AIに渡す入力を小さくし、エラー周辺に絞るためログ末尾だけを残す）
+      - name: Trim failed logs
+        if: ${{ github.event.workflow_run.conclusion != 'success' && github.event.workflow_run.head_repository.full_name == github.repository }}
+        run: |
+          tail -n 400 failed-logs.txt > trimmed-failed-logs.txt
+
+      # GitHub-hosted Runner上でCopilot CLIをインストールするためにNode.jsを準備
+      - name: Set up Node
+        if: ${{ github.event.workflow_run.conclusion != 'success' && github.event.workflow_run.head_repository.full_name == github.repository }}
+        uses: actions/setup-node@v6
+
+      # actions/ai-inferenceが利用するCopilot CLIをインストール
+      - name: Install Copilot CLI
+        if: ${{ github.event.workflow_run.conclusion != 'success' && github.event.workflow_run.head_repository.full_name == github.repository }}
+        run: npm install -g @github/copilot
+
+      # ワークフロー情報と失敗ログをもとに、AIでCI失敗サマリを生成
+      - name: Generate AI summary
+        if: ${{ github.event.workflow_run.conclusion != 'success' && github.event.workflow_run.head_repository.full_name == github.repository }}
+        id: ai_summary
+        uses: actions/ai-inference@v1
+        with:
+          prompt-file: .github/prompts/ci-failure-summary_prompt.yml
+          input: |
+            workflow_name: ${{ github.event.workflow_run.name }}
+            workflow_result: ${{ github.event.workflow_run.conclusion }}
+            branch_name: ${{ github.event.workflow_run.head_branch }}
+            commit_sha: ${{ github.event.workflow_run.head_sha }}
+            run_url: ${{ github.event.workflow_run.html_url }}
+          file_input: |
+            failed_logs: trimmed-failed-logs.txt
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      # AIが生成したMarkdownをGitHub ActionsのJob Summaryに出力
+      - name: Write AI failure summary
+        if: ${{ github.event.workflow_run.conclusion != 'success' && github.event.workflow_run.head_repository.full_name == github.repository }}
+        run: |
+          cat "${{ steps.ai_summary.outputs.response-file }}" >> "$GITHUB_STEP_SUMMARY"
